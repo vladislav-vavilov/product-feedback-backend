@@ -10,12 +10,12 @@ type User {
 
 type Post {
 	id: ID!
+	author: User!
 	title: String!
 	content: String!
 	category: Category!
 	likes: Int!
 	comments: [Comment]
-	author: User!
 }
 
 enum Category {
@@ -35,15 +35,15 @@ input UserInput {
 }
 
 input PostFilters {
+	author: ID
 	title: String
 	content: String
-	author: ID
 }
 
 type Comment {
 	id: ID!
-	content: String!
 	author: User!
+	content: String!
 }
 
 type Query {
@@ -55,9 +55,10 @@ type Mutation {
 	registration(data: UserInput!): User!
 	login(email: String!, password: String!): User!
 	createPost(
+		userId: ID!
 		title: String!
 		content: String!
 		category: Category
-		userId: ID!
 	): Post!
+	createComment(postId: ID!, userId: ID!, content: String!): Comment!
 }

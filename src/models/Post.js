@@ -11,6 +11,7 @@ const schema = new Schema({
 		enum: Object.values(categoriesEnum),
 		required: true,
 	},
+	comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
 })
 
 export default model('Post', schema)

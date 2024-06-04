@@ -2,6 +2,7 @@ import { generateTokens } from './jwt.js'
 import { setTokens } from './helpers.js'
 import User from './models/User.js'
 import Post from './models/Post.js'
+import Comment from './models/Comment.js'
 import bcrypt from 'bcryptjs'
 import { GraphQLError } from 'graphql'
 import { categoriesEnum } from './constants.js'
@@ -26,7 +27,10 @@ const resolvers = {
 			if (filters?.content) query.content = { $regex: filters.content }
 			if (filters?.author) query.author = filters.author
 
-			return await Post.find(query).populate('author')
+			return await Post.find(query).populate([
+				'author',
+				{ path: 'comments', populate: { path: 'author' } },
+			])
 		},
 	},
 	Mutation: {
@@ -67,15 +71,25 @@ const resolvers = {
 
 			return user
 		},
-		createPost: async (_, { title, content, category, userId }) => {
-			const post = new Post({ title, content, category, author: userId })
+		createPost: async (_, { userId, title, content, category }) => {
+			const post = new Post({ author: userId, title, content, category })
+			await post.save()
+
 			const user = await User.findById(userId)
 			user.posts.push(post._id)
-
-			await post.save()
 			await user.save()
 
 			return post
+		},
+		createComment: async (_, { postId, userId, content }) => {
+			const comment = new Comment({ post: postId, author: userId, content })
+			await comment.save()
+
+			const post = await Post.findById(postId)
+			post.comments.push(comment)
+			await post.save()
+
+			return comment.populate('author')
 		},
 	},
 }
