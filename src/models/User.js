@@ -6,4 +6,4 @@ const schema = new Schema({
 	username: { type: String, unique: true, required: true },
 })
 
-module.exports = model('User', schema)
+export default model('User', schema)

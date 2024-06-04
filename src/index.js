@@ -8,9 +8,15 @@ import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import cookieParser from 'cookie-parser'
 import { authMiddleware } from './middlewares.js'
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const PORT = process.env.PORT || 5000
 const app = express()
+
+console.log(process.env.MONGODB_URI)
 
 app.use(express.json())
 app.use(cookieParser())
@@ -25,7 +31,8 @@ const server = new ApolloServer({
 	schema: buildSubgraphSchema({ typeDefs, resolvers }),
 })
 
-server.start().then(() => {
+const start = async () => {
+	await server.start()
 	app.use(
 		'/graphql',
 		express.json(),
@@ -35,5 +42,9 @@ server.start().then(() => {
 			},
 		})
 	)
+
+	await mongoose.connect(process.env.MONGODB_URI)
 	app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`))
-})
+}
+
+start()
