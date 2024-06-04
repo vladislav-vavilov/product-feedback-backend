@@ -3,9 +3,40 @@ type User {
 	email: String
 	password: String
 	username: String
+	firstName: String
+	lastName: String
+	posts: [Post]
+}
+
+type Post {
+	id: ID
+	title: String
+	content: String
+	likes: Int
+	comments: [Comment]
+	author: User
+}
+
+input UserInput {
+	email: String!
+	password: String!
+	username: String!
+	lastName: String!
+	firstName: String!
+}
+
+type Comment {
+	id: ID
+	content: String
+	author: User
+}
+
+type Query {
+	getUser(id: ID!): User!
 }
 
 type Mutation {
-	register(email: String!, password: String!, username: String!): User!
+	registration(data: UserInput!): User!
 	login(email: String!, password: String!): User!
+	createPost(title: String!, content: String!, userId: ID!): Post!
 }
