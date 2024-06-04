@@ -1,20 +1,29 @@
 type User {
-	id: ID
-	email: String
-	password: String
-	username: String
-	firstName: String
-	lastName: String
+	id: ID!
+	email: String!
+	password: String!
+	username: String!
+	firstName: String!
+	lastName: String!
 	posts: [Post]
 }
 
 type Post {
-	id: ID
-	title: String
-	content: String
-	likes: Int
+	id: ID!
+	title: String!
+	content: String!
+	category: Category!
+	likes: Int!
 	comments: [Comment]
-	author: User
+	author: User!
+}
+
+enum Category {
+	UI
+	UX
+	ENHANCEMENT
+	BUG
+	FEATURE
 }
 
 input UserInput {
@@ -28,14 +37,13 @@ input UserInput {
 input PostFilters {
 	title: String
 	content: String
-	likes: Int
 	author: ID
 }
 
 type Comment {
-	id: ID
-	content: String
-	author: User
+	id: ID!
+	content: String!
+	author: User!
 }
 
 type Query {
@@ -46,5 +54,10 @@ type Query {
 type Mutation {
 	registration(data: UserInput!): User!
 	login(email: String!, password: String!): User!
-	createPost(title: String!, content: String!, userId: ID!): Post!
+	createPost(
+		title: String!
+		content: String!
+		category: Category
+		userId: ID!
+	): Post!
 }

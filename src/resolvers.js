@@ -4,8 +4,10 @@ import User from './models/User.js'
 import Post from './models/Post.js'
 import bcrypt from 'bcryptjs'
 import { GraphQLError } from 'graphql'
+import { categoriesEnum } from './constants.js'
 
 const resolvers = {
+	Category: categoriesEnum,
 	Query: {
 		getUser: async (_, { id }) => {
 			const user = await User.findById(id).populate('posts')
@@ -65,8 +67,8 @@ const resolvers = {
 
 			return user
 		},
-		createPost: async (_, { title, content, userId }) => {
-			const post = new Post({ title, content, user: userId })
+		createPost: async (_, { title, content, category, userId }) => {
+			const post = new Post({ title, content, category, author: userId })
 			const user = await User.findById(userId)
 			user.posts.push(post._id)
 
