@@ -1,0 +1,10 @@
+type User {
+	id: ID
+	email: String
+	password: String
+	username: String
+}
+
+type Mutation {
+	register(email: String, password: String, username: String): User
+}
