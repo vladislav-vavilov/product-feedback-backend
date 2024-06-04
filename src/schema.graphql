@@ -25,6 +25,13 @@ input UserInput {
 	firstName: String!
 }
 
+input PostFilters {
+	title: String
+	content: String
+	likes: Int
+	author: ID
+}
+
 type Comment {
 	id: ID
 	content: String
@@ -33,6 +40,7 @@ type Comment {
 
 type Query {
 	getUser(id: ID!): User!
+	getPosts(filters: PostFilters): [Post!]!
 }
 
 type Mutation {

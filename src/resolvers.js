@@ -17,6 +17,15 @@ const resolvers = {
 
 			return user
 		},
+		getPosts: async (_, { filters }) => {
+			const query = {}
+
+			if (filters?.title) query.title = { $regex: filters.title }
+			if (filters?.content) query.content = { $regex: filters.content }
+			if (filters?.author) query.author = filters.author
+
+			return await Post.find(query).populate('author')
+		},
 	},
 	Mutation: {
 		registration: async (_, { data }, context) => {
@@ -57,7 +66,7 @@ const resolvers = {
 			return user
 		},
 		createPost: async (_, { title, content, userId }) => {
-			const post = new Post({ title, content, userId })
+			const post = new Post({ title, content, user: userId })
 			const user = await User.findById(userId)
 			user.posts.push(post._id)
 
