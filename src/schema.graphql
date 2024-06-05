@@ -41,10 +41,10 @@ input PostFilters {
 }
 
 input UpdatePostInput {
-	id: ID!
 	title: String
 	content: String
 	category: Category
+	likes: Int
 }
 
 type Comment {
@@ -72,7 +72,7 @@ type Mutation {
 		content: String!
 		category: Category!
 	): Post!
-	updatePost(id: ID!, data: UpdatePostInput): Post!
+	updatePost(id: ID!, data: UpdatePostInput!): Post!
 	deletePost(id: ID!): ID!
 
 	createComment(postId: ID!, userId: ID!, data: CommentInput!): Comment!
