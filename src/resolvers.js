@@ -64,6 +64,44 @@ const resolvers = {
 
 			return user
 		},
+		updateUser: async (_, { input: { id, password, ...data } }, context) => {
+			if (context.userId !== id) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			const user = await User.findById(id)
+
+			if (password) {
+				const { currentPassword, newPassword } = password
+				const isMatch = bcrypt.compareSync(currentPassword, user.password)
+
+				if (!isMatch) {
+					throw new GraphQLError('Current password is invalid', {
+						extensions: { code: 'INVALID_CREDENTIALS' },
+					})
+				}
+
+				const newPasswordHash = bcrypt.hashSync(newPassword, 6)
+				user.password = newPasswordHash
+			}
+
+			Object.assign(user, data)
+			await user.save()
+
+			return user
+		},
+		deleteUser: async (_, { id }, context) => {
+			if (context.userId !== id) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			await User.findByIdAndDelete(id)
+			return id
+		},
 		createPost: async (_, { input: { userId, title, content, category } }) => {
 			const post = new Post({ author: userId, title, content, category })
 			await post.save()
