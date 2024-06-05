@@ -38,10 +38,7 @@ const resolvers = {
 			}
 
 			const passwordHash = bcrypt.hashSync(data.password, 6)
-			const user = new User({
-				...data,
-				password: passwordHash,
-			})
+			const user = new User({ ...data, password: passwordHash })
 
 			const tokens = generateTokens(user._id, context.req.get('user-agent'))
 			setTokens(context.res, tokens)
@@ -67,7 +64,7 @@ const resolvers = {
 
 			return user
 		},
-		createPost: async (_, { userId, title, content, category }) => {
+		createPost: async (_, { data: { userId, title, content, category } }) => {
 			const post = new Post({ author: userId, title, content, category })
 			await post.save()
 

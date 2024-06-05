@@ -34,6 +34,13 @@ input UserInput {
 	firstName: String!
 }
 
+input CreatePostInput {
+	userId: ID!
+	title: String!
+	content: String!
+	category: Category!
+}
+
 input PostFilters {
 	author: ID
 	title: String
@@ -66,12 +73,7 @@ type Mutation {
 	registration(data: UserInput!): User!
 	login(email: String!, password: String!): User!
 
-	createPost(
-		userId: ID!
-		title: String!
-		content: String!
-		category: Category!
-	): Post!
+	createPost(data: CreatePostInput): Post!
 	updatePost(id: ID!, data: UpdatePostInput!): Post!
 	deletePost(id: ID!): ID!
 
