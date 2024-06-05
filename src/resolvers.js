@@ -10,7 +10,7 @@ import { categoriesEnum } from './constants.js'
 const resolvers = {
 	Category: categoriesEnum,
 	Query: {
-		getUser: async (_, { id }) => {
+		user: async (_, { id }) => {
 			const user = await User.findById(id).populate('posts')
 			if (!user) {
 				throw new GraphQLError('User does not exist', {
@@ -20,7 +20,7 @@ const resolvers = {
 
 			return user
 		},
-		getPosts: async (_, { filters }) => {
+		posts: async (_, { filters }) => {
 			const query = {}
 			if (filters?.title) query.title = { $regex: filters.title }
 			if (filters?.content) query.content = { $regex: filters.content }
@@ -30,14 +30,14 @@ const resolvers = {
 		},
 	},
 	Mutation: {
-		registration: async (_, { data }, context) => {
-			if (await User.findOne({ email: data.email })) {
+		register: async (_, { input }, context) => {
+			if (await User.findOne({ email: input.email })) {
 				throw new GraphQLError('User already exists', {
 					extensions: { code: 'MONGODB_VALIDATION_FAILED' },
 				})
 			}
 
-			const passwordHash = bcrypt.hashSync(data.password, 6)
+			const passwordHash = bcrypt.hashSync(input.password, 6)
 			const user = new User({ ...data, password: passwordHash })
 
 			const tokens = generateTokens(user._id, context.req.get('user-agent'))
@@ -45,7 +45,7 @@ const resolvers = {
 
 			return await user.save()
 		},
-		login: async (_, { email, password }, context) => {
+		login: async (_, { input: { email, password } }, context) => {
 			const user = await User.findOne({ email })
 			if (!user) {
 				throw new GraphQLError('User not found', {
@@ -64,7 +64,7 @@ const resolvers = {
 
 			return user
 		},
-		createPost: async (_, { data: { userId, title, content, category } }) => {
+		createPost: async (_, { input: { userId, title, content, category } }) => {
 			const post = new Post({ author: userId, title, content, category })
 			await post.save()
 
@@ -74,8 +74,8 @@ const resolvers = {
 
 			return post
 		},
-		updatePost: async (_, { id, data }, context) => {
-			const post = await Post.findById(id)
+		updatePost: async (_, { input }, context) => {
+			const post = await Post.findById(input.id)
 			const isCreator = post.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -84,7 +84,7 @@ const resolvers = {
 				})
 			}
 
-			Object.assign(post, data)
+			Object.assign(post, input)
 			await post.save()
 
 			return post
@@ -102,7 +102,7 @@ const resolvers = {
 			await post.deleteOne()
 			return post._id
 		},
-		createComment: async (_, { postId, userId, data: { content } }) => {
+		createComment: async (_, { input: { postId, userId, content } }) => {
 			const comment = new Comment({ post: postId, author: userId, content })
 			await comment.save()
 
@@ -112,8 +112,8 @@ const resolvers = {
 
 			return comment.populate('author')
 		},
-		updateComment: async (_, { id, data }, context) => {
-			const comment = await Comment.findById(id)
+		updateComment: async (_, { input }, context) => {
+			const comment = await Comment.findById(input.id)
 			const isCreator = comment.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -122,7 +122,7 @@ const resolvers = {
 				})
 			}
 
-			Object.assign(comment, data)
+			Object.assign(comment, input)
 			await comment.save()
 
 			return comment.populate('author')

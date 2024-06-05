@@ -34,6 +34,11 @@ input UserInput {
 	firstName: String!
 }
 
+input LoginInput {
+	email: String!
+	password: String!
+}
+
 input CreatePostInput {
 	userId: ID!
 	title: String!
@@ -41,13 +46,14 @@ input CreatePostInput {
 	category: Category!
 }
 
-input PostFilters {
+input PostsFiltersInput {
 	author: ID
 	title: String
 	content: String
 }
 
 input UpdatePostInput {
+	id: ID!
 	title: String
 	content: String
 	category: Category
@@ -60,24 +66,31 @@ type Comment {
 	content: String!
 }
 
-input CommentInput {
+input CreateCommentInput {
+	postId: ID!
+	userId: ID!
+	content: String!
+}
+
+input UpdateCommentInput {
+	id: ID!
 	content: String!
 }
 
 type Query {
-	getUser(id: ID!): User!
-	getPosts(filters: PostFilters): [Post!]!
+	user(id: ID!): User!
+	posts(filters: PostsFiltersInput): [Post!]!
 }
 
 type Mutation {
-	registration(data: UserInput!): User!
-	login(email: String!, password: String!): User!
+	register(input: UserInput!): User!
+	login(input: LoginInput!): User!
 
-	createPost(data: CreatePostInput): Post!
-	updatePost(id: ID!, data: UpdatePostInput!): Post!
+	createPost(input: CreatePostInput!): Post!
+	updatePost(input: UpdatePostInput!): Post!
 	deletePost(id: ID!): ID!
 
-	createComment(postId: ID!, userId: ID!, data: CommentInput!): Comment!
-	updateComment(id: ID!, data: CommentInput!): Comment!
+	createComment(input: CreateCommentInput!): Comment!
+	updateComment(input: UpdateCommentInput!): Comment!
 	deleteComment(id: ID!): ID!
 }
