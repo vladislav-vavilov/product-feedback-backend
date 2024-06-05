@@ -48,9 +48,13 @@ input UpdatePostInput {
 }
 
 type Comment {
+	id: ID!
 	author: User!
 	content: String!
-	replies: [Comment!]!
+}
+
+input CommentInput {
+	content: String!
 }
 
 type Query {
@@ -61,6 +65,7 @@ type Query {
 type Mutation {
 	registration(data: UserInput!): User!
 	login(email: String!, password: String!): User!
+
 	createPost(
 		userId: ID!
 		title: String!
@@ -69,5 +74,8 @@ type Mutation {
 	): Post!
 	updatePost(id: ID!, data: UpdatePostInput): Post!
 	deletePost(id: ID!): ID!
-	createComment(postId: ID!, userId: ID!, content: String!): Comment!
+
+	createComment(postId: ID!, userId: ID!, data: CommentInput!): Comment!
+	updateComment(id: ID!, data: CommentInput!): Comment!
+	deleteComment(id: ID!): ID!
 }

@@ -22,15 +22,11 @@ const resolvers = {
 		},
 		getPosts: async (_, { filters }) => {
 			const query = {}
-
 			if (filters?.title) query.title = { $regex: filters.title }
 			if (filters?.content) query.content = { $regex: filters.content }
 			if (filters?.author) query.author = filters.author
 
-			return await Post.find(query).populate([
-				'author',
-				{ path: 'comments', populate: ['author', 'replies'] },
-			])
+			return await Post.find(query).populate(['author', 'comments'])
 		},
 	},
 	Mutation: {
@@ -83,9 +79,9 @@ const resolvers = {
 		},
 		updatePost: async (_, { id, data }, context) => {
 			const post = await Post.findById(id)
-			const isCreator = post.author.toString() !== context.userId
+			const isCreator = post.author.toString() === context.userId
 
-			if (isCreator) {
+			if (!isCreator) {
 				throw new GraphQLError('Access denied', {
 					extensions: { code: 'ACCESS_DENIED' },
 				})
@@ -98,19 +94,18 @@ const resolvers = {
 		},
 		deletePost: async (_, { id }, context) => {
 			const post = await Post.findById(id)
-			const isCreator = post.author.toString() !== context.userId
+			const isCreator = post.author.toString() === context.userId
 
-			if (isCreator) {
+			if (!isCreator) {
 				throw new GraphQLError('Access denied', {
 					extensions: { code: 'ACCESS_DENIED' },
 				})
 			}
 
 			await post.deleteOne()
-
 			return post._id
 		},
-		createComment: async (_, { postId, userId, content }) => {
+		createComment: async (_, { postId, userId, data: { content } }) => {
 			const comment = new Comment({ post: postId, author: userId, content })
 			await comment.save()
 
@@ -119,6 +114,34 @@ const resolvers = {
 			await post.save()
 
 			return comment.populate('author')
+		},
+		updateComment: async (_, { id, data }, context) => {
+			const comment = await Comment.findById(id)
+			const isCreator = comment.author.toString() === context.userId
+
+			if (!isCreator) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			Object.assign(comment, data)
+			await comment.save()
+
+			return comment.populate('author')
+		},
+		deleteComment: async (_, { id }, context) => {
+			const comment = await Comment.findById(id)
+			const isCreator = comment.author.toString() === context.userId
+
+			if (!isCreator) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			await comment.deleteOne()
+			return comment._id
 		},
 	},
 }
