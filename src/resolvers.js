@@ -29,7 +29,7 @@ const resolvers = {
 
 			return await Post.find(query).populate([
 				'author',
-				{ path: 'comments', populate: { path: 'author' } },
+				{ path: 'comments', populate: ['author', 'replies'] },
 			])
 		},
 	},
@@ -80,6 +80,35 @@ const resolvers = {
 			await user.save()
 
 			return post
+		},
+		updatePost: async (_, { id, data }, context) => {
+			const post = await Post.findById(id)
+			const isCreator = post.author.toString() !== context.userId
+
+			if (isCreator) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			Object.assign(post, data)
+			await post.save()
+
+			return post
+		},
+		deletePost: async (_, { id }, context) => {
+			const post = await Post.findById(id)
+			const isCreator = post.author.toString() !== context.userId
+
+			if (isCreator) {
+				throw new GraphQLError('Access denied', {
+					extensions: { code: 'ACCESS_DENIED' },
+				})
+			}
+
+			await post.deleteOne()
+
+			return post._id
 		},
 		createComment: async (_, { postId, userId, content }) => {
 			const comment = new Comment({ post: postId, author: userId, content })

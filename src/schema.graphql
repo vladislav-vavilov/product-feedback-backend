@@ -40,10 +40,17 @@ input PostFilters {
 	content: String
 }
 
-type Comment {
+input UpdatePostInput {
 	id: ID!
+	title: String
+	content: String
+	category: Category
+}
+
+type Comment {
 	author: User!
 	content: String!
+	replies: [Comment!]!
 }
 
 type Query {
@@ -58,7 +65,9 @@ type Mutation {
 		userId: ID!
 		title: String!
 		content: String!
-		category: Category
+		category: Category!
 	): Post!
+	updatePost(id: ID!, data: UpdatePostInput): Post!
+	deletePost(id: ID!): ID!
 	createComment(postId: ID!, userId: ID!, content: String!): Comment!
 }

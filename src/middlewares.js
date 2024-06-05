@@ -8,20 +8,20 @@ export const authMiddleware = (req, res) => {
 		const userAgent = req.get('user-agent')
 
 		const { id } = jwt.verify(access, secretKey)
-		if (id) return { id }
+		if (id) return { userId: id }
 
 		const result = jwt.verify(refresh, secretKey)
 		if (result.id && result.userAgent === userAgent) {
 			const newTokens = generateTokens(result.id, result.userAgent)
 			setTokens(res, newTokens)
 
-			return { id: result.id }
+			return { userId: result.id }
 		}
 
-		return { id: null }
+		return { userId: null }
 	} catch (error) {
 		if (error.name === 'JsonWebTokenError') {
-			return { id: null }
+			return { userId: null }
 		}
 	}
 }
