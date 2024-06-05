@@ -38,7 +38,7 @@ const resolvers = {
 			}
 
 			const passwordHash = bcrypt.hashSync(input.password, 6)
-			const user = new User({ ...data, password: passwordHash })
+			const user = new User({ ...input, password: passwordHash })
 
 			const tokens = generateTokens(user._id, context.req.get('user-agent'))
 			setTokens(context.res, tokens)
