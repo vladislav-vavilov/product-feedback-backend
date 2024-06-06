@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser'
 import { authMiddleware } from './middlewares.js'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
+import cors from 'cors'
 
 dotenv.config()
 
@@ -36,6 +37,7 @@ const start = async () => {
 	app.use(
 		'/graphql',
 		express.json(),
+		cors(),
 		expressMiddleware(server, {
 			context: async ({ req, res }) => {
 				return { req, res, ...authMiddleware(req, res) }
