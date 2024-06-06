@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { secretKey } from './config.js'
-import { setTokens } from './helpers.js'
-import { generateTokens } from './jwt.js'
+import { generateTokens, setTokens } from './tokens.js'
 
 export const authMiddleware = (req, res) => {
 	const { access, refresh } = req.cookies

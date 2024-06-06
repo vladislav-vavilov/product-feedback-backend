@@ -1,5 +1,4 @@
-import { generateTokens } from './jwt.js'
-import { setTokens } from './helpers.js'
+import { generateTokens, setTokens } from './tokens.js'
 import User from './models/User.js'
 import Post from './models/Post.js'
 import Comment from './models/Comment.js'
