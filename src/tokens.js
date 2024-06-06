@@ -10,12 +10,12 @@ export const generateTokens = (id, userAgent) => {
 	return { accessToken, refreshToken }
 }
 
-export const setTokens = (res, tokens) => {
-	res.cookie('access', tokens.accessToken, {
+export const setTokens = (res, { accessToken, refreshToken }) => {
+	res.cookie('access_token', accessToken, {
 		httpOnly: true,
 		maxAge: 1000 * 60 * 60,
 	})
-	res.cookie('refresh', tokens.refreshToken, {
+	res.cookie('refresh_token', refreshToken, {
 		httpOnly: true,
 		maxAge: 1000 * 60 * 60 * 24 * 7,
 	})
