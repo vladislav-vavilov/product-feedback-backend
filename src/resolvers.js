@@ -92,14 +92,18 @@ const resolvers = {
 
 			return user
 		},
-		deleteUser: async (_, { id }, context) => {
-			if (context.userId !== id) {
+		deleteUser: async (_, { id }, { res, userId }) => {
+			if (userId !== id) {
 				throw new GraphQLError('Access denied', {
 					extensions: { code: 'ACCESS_DENIED' },
 				})
 			}
 
 			await User.findByIdAndDelete(id)
+
+			res.clearCookie('access')
+			res.clearCookie('refresh')
+
 			return id
 		},
 		createPost: async (_, { input: { userId, title, content, category } }) => {
