@@ -23,12 +23,13 @@ app.use(express.json())
 app.use(cookieParser())
 
 const typeDefs = gql(
-	readFileSync(resolve(import.meta.dirname, 'schema.graphql'), {
+	readFileSync(resolve(import.meta.dirname, '../src/schema.graphql'), {
 		encoding: 'utf-8',
 	})
 )
 
 const server = new ApolloServer({
+	// @ts-ignore
 	schema: buildSubgraphSchema({ typeDefs, resolvers }),
 })
 
@@ -45,7 +46,7 @@ const start = async () => {
 		})
 	)
 
-	await mongoose.connect(process.env.MONGODB_URI)
+	await mongoose.connect(process.env.MONGODB_URI ?? '')
 	app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`))
 }
 

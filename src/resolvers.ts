@@ -4,10 +4,14 @@ import Post from './models/Post.js'
 import Comment from './models/Comment.js'
 import bcrypt from 'bcryptjs'
 import { GraphQLError } from 'graphql'
-import { categoriesEnum } from './constants.js'
+import type {
+	Resolvers,
+	Post as PostType,
+	User as UserType,
+	Comment as CommentType,
+} from './types.js'
 
-const resolvers = {
-	Category: categoriesEnum,
+const resolvers: Resolvers = {
 	Query: {
 		user: async (_, { id }) => {
 			const user = await User.findById(id).populate('posts')
@@ -17,15 +21,24 @@ const resolvers = {
 				})
 			}
 
-			return user
+			return user.populate('posts')
 		},
 		posts: async (_, { filters }) => {
-			const query = {}
-			if (filters?.title) query.title = { $regex: filters.title }
-			if (filters?.content) query.content = { $regex: filters.content }
-			if (filters?.author) query.author = filters.author
+			const titleQuery = { title: { $regex: filters?.title } }
+			const contentQuery = { content: { $regex: filters?.content } }
+			const authorQuery = { author: filters?.author }
 
-			return await Post.find(query).populate(['author', 'comments'])
+			const query = {
+				...(filters?.title && titleQuery),
+				...(filters?.content && contentQuery),
+				...(filters?.author && authorQuery),
+			}
+			const posts = await Post.find(query).populate<{
+				author: UserType
+				comments: CommentType[]
+			}>(['author', 'comments'])
+
+			return posts as PostType[]
 		},
 	},
 	Mutation: {
@@ -39,10 +52,11 @@ const resolvers = {
 			const passwordHash = bcrypt.hashSync(input.password, 6)
 			const user = new User({ ...input, password: passwordHash })
 
-			const tokens = generateTokens(user._id, context.req.get('user-agent'))
+			const tokens = generateTokens(user.id, context.req.get('user-agent'))
 			setTokens(context.res, tokens)
 
-			return await user.save()
+			await user.save()
+			return user.populate('posts')
 		},
 		login: async (_, { input: { email, password } }, context) => {
 			const user = await User.findOne({ email })
@@ -58,10 +72,10 @@ const resolvers = {
 				})
 			}
 
-			const tokens = generateTokens(user._id, context.req.get('user-agent'))
+			const tokens = generateTokens(user.id, context.req.get('user-agent'))
 			setTokens(context.res, tokens)
 
-			return user
+			return user.populate('posts')
 		},
 		updateUser: async (_, { input: { id, password, ...data } }, context) => {
 			if (context.userId !== id) {
@@ -71,6 +85,11 @@ const resolvers = {
 			}
 
 			const user = await User.findById(id)
+			if (!user) {
+				throw new GraphQLError('User does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
 
 			if (password) {
 				const { currentPassword, newPassword } = password
@@ -89,7 +108,7 @@ const resolvers = {
 			Object.assign(user, data)
 			await user.save()
 
-			return user
+			return user.populate('posts')
 		},
 		deleteUser: async (_, { id }, { res, userId }) => {
 			if (userId !== id) {
@@ -110,13 +129,24 @@ const resolvers = {
 			await post.save()
 
 			const user = await User.findById(userId)
+			if (!user) {
+				throw new GraphQLError('User does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
 			user.posts.push(post._id)
 			await user.save()
 
-			return post
+			return post.populate('posts')
 		},
 		updatePost: async (_, { input }, context) => {
 			const post = await Post.findById(input.id)
+			if (!post) {
+				throw new GraphQLError('Post does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
+
 			const isCreator = post.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -128,10 +158,16 @@ const resolvers = {
 			Object.assign(post, input)
 			await post.save()
 
-			return post
+			return post.populate(['author', 'comments'])
 		},
 		deletePost: async (_, { id }, context) => {
 			const post = await Post.findById(id)
+			if (!post) {
+				throw new GraphQLError('Post does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
+
 			const isCreator = post.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -141,20 +177,32 @@ const resolvers = {
 			}
 
 			await post.deleteOne()
-			return post._id
+			return post.id
 		},
 		createComment: async (_, { input: { postId, userId, content } }) => {
 			const comment = new Comment({ post: postId, author: userId, content })
 			await comment.save()
 
 			const post = await Post.findById(postId)
-			post.comments.push(comment)
+			if (!post) {
+				throw new GraphQLError('Post does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
+
+			post.comments.push(comment._id)
 			await post.save()
 
 			return comment.populate('author')
 		},
 		updateComment: async (_, { input }, context) => {
 			const comment = await Comment.findById(input.id)
+			if (!comment) {
+				throw new GraphQLError('Comment does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
+
 			const isCreator = comment.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -170,6 +218,11 @@ const resolvers = {
 		},
 		deleteComment: async (_, { id }, context) => {
 			const comment = await Comment.findById(id)
+			if (!comment) {
+				throw new GraphQLError('Comment does not exist', {
+					extensions: { code: 'GRAPHQL_NOT_FOUND' },
+				})
+			}
 			const isCreator = comment.author.toString() === context.userId
 
 			if (!isCreator) {
@@ -179,7 +232,7 @@ const resolvers = {
 			}
 
 			await comment.deleteOne()
-			return comment._id
+			return comment.id
 		},
 	},
 }

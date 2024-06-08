@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import { categoriesEnum } from '../constants.js'
+import { Category } from '../types.js'
 
 const schema = new Schema({
 	title: { type: String, required: true },
@@ -8,7 +8,7 @@ const schema = new Schema({
 	author: { type: Schema.ObjectId, ref: 'User', required: true },
 	category: {
 		type: String,
-		enum: Object.values(categoriesEnum),
+		enum: Object.values(Category),
 		required: true,
 	},
 	comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
